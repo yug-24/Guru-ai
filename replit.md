@@ -2,6 +2,8 @@
 
 Guru AI is a personalized learning tutor application designed specifically for rural students in India. The application provides an accessible educational platform that supports multiple languages and grade levels, offering explanations and quizzes tailored to students' needs. The system combines text and voice input capabilities to accommodate different learning preferences and accessibility requirements.
 
+**Current Status**: Fully functional Streamlit application running on Replit with OpenAI integration for GPT-4o-mini text generation, Whisper speech-to-text, and DALL-E image generation.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
