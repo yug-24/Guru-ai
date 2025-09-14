@@ -1,10 +1,9 @@
 import streamlit as st
 import openai
 import os
-from dotenv import load_dotenv
 import io  # For audio handling
 
-load_dotenv()
+# Get OpenAI API key from environment (Replit Secrets)
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 st.title("Guru AI: Personalized Learning Tutor for Rural Students")
