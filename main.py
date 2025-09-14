@@ -1,10 +1,15 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 import io  # For audio handling
 
-# Get OpenAI API key from environment (Replit Secrets)
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Initialize OpenAI client with API key from environment (Replit Secrets)
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    st.error("OpenAI API key is missing! Please add it to Replit Secrets.")
+    st.stop()
+
+client = OpenAI(api_key=api_key)
 
 st.title("Guru AI: Personalized Learning Tutor for Rural Students")
 
@@ -25,9 +30,12 @@ if st.button("Get Learning Help"):
     if audio_file:
         try:
             audio_bytes = audio_file.read()
-            transcript_response = openai.audio.transcriptions.create(
+            # Create a file-like object with a name for audio transcription
+            audio_file_obj = io.BytesIO(audio_bytes)
+            audio_file_obj.name = "audio.wav"  # Required for Whisper
+            transcript_response = client.audio.transcriptions.create(
                 model="whisper-1",
-                file=io.BytesIO(audio_bytes)
+                file=audio_file_obj
             )
             user_input = transcript_response.text
             st.write(f"Transcribed Voice: {user_input}")
@@ -38,7 +46,7 @@ if st.button("Get Learning Help"):
         # Generate explanation/quiz with GPT
         prompt = f"You are a friendly tutor for {grade} {subject} in simple {language} for rural Indian students. User query: {user_input}. Provide a clear explanation, then a short 2-3 question quiz with answers. Make it engaging and culturally relevant (e.g., use Indian examples like farming for science)."
         try:
-            response = openai.chat.completions.create(
+            response = client.chat.completions.create(
                 model="gpt-4o-mini",  # Cheaper model for free tier
                 messages=[{"role": "user", "content": prompt}]
             )
@@ -47,15 +55,18 @@ if st.button("Get Learning Help"):
             st.write(explanation)
 
             # Generate visual with DALL-E
-            image_prompt = f"Simple, colorful educational diagram for {grade} {subject} topic: {user_input}. Style: Cartoon for kids, with Indian elements like village scenes."
-            image_response = openai.images.generate(
-                model="dall-e-2",  # Free tier friendly
-                prompt=image_prompt,
-                n=1,
-                size="512x512"
-            )
-            image_url = image_response.data[0].url
-            st.image(image_url, caption="Visual Aid to Help You Learn")
+            try:
+                image_prompt = f"Simple, colorful educational diagram for {grade} {subject} topic: {user_input}. Style: Cartoon for kids, with Indian elements like village scenes."
+                image_response = client.images.generate(
+                    model="dall-e-2",  # DALL-E 2 model
+                    prompt=image_prompt,
+                    n=1,
+                    size="512x512"
+                )
+                image_url = image_response.data[0].url
+                st.image(image_url, caption="Visual Aid to Help You Learn")
+            except Exception as img_error:
+                st.info("Visual aid generation temporarily unavailable. The lesson content above is still complete!")
         except Exception as e:
             st.error(f"AI error: {str(e)}. Check API key or try simpler query.")
 
